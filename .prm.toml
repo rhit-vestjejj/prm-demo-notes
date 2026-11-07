@@ -1,0 +1,25 @@
+# PRediction Market contract for this repo.
+# The factory reads this file from the PR's BASE branch, never the PR head, so a PR can't rewrite its own gate.
+
+[target]
+name = "prm-demo-notes"
+spec = "docs/SPEC.md"   # public spec the AI traders may read
+
+[settle]
+# How this repo's own test suite runs. Merged PRs are settled by the post-merge oracle below, not by tests.
+command = "python -m pytest tests -q -p no:cacheprovider --junitxml={junit}"
+timeout_s = 120
+env = { PYTHONPATH = "{head}" }
+
+[postmerge]
+# A merged PR settles NO if, within this window, it is reverted or a fix commit changes the lines it added.
+window_days = 14
+
+[context]
+test_globs = ["tests/**", "**/test_*.py"]
+sensitive_globs = ["**/auth*", ".github/**", "**/*.env*"]
+source_globs = ["**/*.py"]
+
+[gate]
+auto_merge = 0.90     # price at or above: auto-merge OK
+human_review = 0.60   # price below: blocked. In between: escalation rounds, then "no consensus" (blocked)
